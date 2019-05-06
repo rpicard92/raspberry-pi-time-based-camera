@@ -110,7 +110,7 @@ def capture(net, confidenceThreshold, camera, timeOfClips, outputPath, classific
         # Start Time
         startTime = time.time()
         
-        fps = 0.01
+        fps = 0.1
 
         # main logic
         numberOfFrames = timeOfClips/fps
@@ -169,11 +169,7 @@ def main():
         outputPath = args['outputPath']
         classificationType = args["detections"]
 
-        # load our serialized model from disk
-        print("[INFO] Loading deep deural net...")
-        net = cv2.dnn.readNetFromCaffe(prototxt, model)
-        print("[INFO] Deep deural net loaded.")
-
+	net = 0
 
         # initialize the list of class labels MobileNet SSD was trained to
         # detect, then generate a set of bounding box colors for each class
@@ -259,11 +255,11 @@ def callBack():
 onOffSwitch = False
 
 # local host
-PI = 'XXX.XXX.XXX.XXX'
+PI = '10.0.0.10'
 PORT_PI = 8889
  
 # phone
-PHONE = 'XXX.XXX.XXX.XXX'
+PHONE = '10.10.0.1'
 PORT_PHONE = 8888
 
 t = threading.Thread(target=listen_client)
