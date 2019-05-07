@@ -104,7 +104,7 @@ def closeVideoStream(VideoStream):
         VideoStream.stop()
 
 
-def capture(net, confidenceThreshold, camera, timeOfClips, outputPath, classificationType, CLASSES, COLORS, VideoStream):
+def run(net, confidenceThreshold, camera, timeOfClips, outputPath, classificationType, CLASSES, COLORS, VideoStream):
         print('[INFO] Initiating Recording Protocol...')
 
         # Start Time
@@ -130,16 +130,24 @@ def capture(net, confidenceThreshold, camera, timeOfClips, outputPath, classific
         print('[INFO] Elapsed Time: ' + str(elapsedTime) + ' seconds')
 
 
-def run(net, confidenceThreshold, camera, timeOfClips, outputPath, classificationType, CLASSES, COLORS):
+def idle(net, confidenceThreshold, camera, timeOfClips, outputPath, classificationType, CLASSES, COLORS):
         print("[INFO] System turned on.")
-        print("[INFO] Initiating video stream run...")
-        VideoStream = initVideoStream(camera)
-        capture(net, confidenceThreshold, camera, timeOfClips, outputPath, classificationType, CLASSES, COLORS, VideoStream)
-        print("[INFO] Video Stream Finished.")           
-        global onOffSwitch
-        closeVideoStream(VideoStream)
-        onOffSwitch = False
-        print("[INFO] System turned off.")
+        print("[INFO] Initiating idle state...")
+        local_tz = get_localzone() 
+        tz = pytz.timezone(str(local_tz))
+        while True:
+                now = datetime.now().strftime('%H:%M:%S')
+                #print(now)
+                if(str(now) == '05:50:00' or str(now) == '18:00:00'):
+                        VideoStream = initVideoStream(camera)
+                        run(net, confidenceThreshold, camera, timeOfClips, outputPath, classificationType, CLASSES, COLORS, VideoStream)
+                        print("[INFO] Video Stream Finished.")           
+                global onOffSwitch
+                if (onOffSwitch == False):
+                        closeVideoStream(VideoStream)
+                        print("[INFO] System turned off.")
+                        break
+
 
 def main():
 
@@ -180,7 +188,7 @@ def main():
         COLORS = np.random.uniform(0, 255, size=(len(CLASSES), 3))
         
   
-        run(net, confidenceThreshold, camera, timeOfClips, outputPath, classificationType, CLASSES, COLORS)
+        idle(net, confidenceThreshold, camera, timeOfClips, outputPath, classificationType, CLASSES, COLORS)
 
 
 
@@ -255,11 +263,11 @@ def callBack():
 onOffSwitch = False
 
 # local host
-PI = '10.0.0.10'
+PI = ''
 PORT_PI = 8889
  
 # phone
-PHONE = '10.10.0.1'
+PHONE = ''
 PORT_PHONE = 8888
 
 t = threading.Thread(target=listen_client)
