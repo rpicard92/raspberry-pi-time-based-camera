@@ -1,5 +1,5 @@
 # USAGE
-# python real_time_object_detection.py --prototxt MobileNetSSD_deploy.prototxt.txt --model MobileNetSSD_deploy.caffemodel --picamera 1 --time 1 --detections 0
+# python real_time_object_detection.py --picamera 1 --time 60
 
 # import the necessary packages
 from imutils.video import VideoStream
@@ -80,7 +80,7 @@ def emailVideo(outputPath):
 
         email = ''
         password = ''
-        subject = 'Security Alert From Raspberry Pi!'
+        subject = 'Feeding Alert from the Cat Cam!'
         body = str(now)
         server = 'smtp.gmail.com'
         port = 587
@@ -135,16 +135,26 @@ def idle(camera, timeOfClips, outputPath):
         print("[INFO] Initiating idle state...")
         local_tz = get_localzone() 
         tz = pytz.timezone(str(local_tz))
+        VideoStream = initVideoStream(camera)
         while True:
                 now = datetime.now().strftime('%H:%M:%S')
                 #print(now)
                 if(str(now) == '05:50:00' or str(now) == '18:00:00'):
-                        print("[INFO] Video Stream Started.")           
-                        VideoStream = initVideoStream(camera)
+                        print("[INFO] Frame Capture Started.")
                         run(camera, timeOfClips, outputPath, VideoStream)
-                        closeVideoStream(VideoStream)
-                        print("[INFO] Video Stream Finished.")           
-
+                        print("[INFO] Frame Capture Finished.")
+                        print("[INFO] Frame Capture Started.")
+                        run(camera, timeOfClips, outputPath, VideoStream)
+                        print("[INFO] Frame Capture Finished.")
+                        print("[INFO] Frame Capture Started.")
+                        run(camera, timeOfClips, outputPath, VideoStream)
+                        print("[INFO] Frame Capture Finished.")
+                        print("[INFO] Frame Capture Started.")
+                        run(camera, timeOfClips, outputPath, VideoStream)
+                        print("[INFO] Frame Capture Finished.")
+                        print("[INFO] Frame Capture Started.")
+                        run(camera, timeOfClips, outputPath, VideoStream)
+                        print("[INFO] Frame Capture Finished.")
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
