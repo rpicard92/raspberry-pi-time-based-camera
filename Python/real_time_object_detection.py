@@ -104,7 +104,7 @@ def closeVideoStream(VideoStream):
         VideoStream.stop()
 
 
-def run(net, confidenceThreshold, camera, timeOfClips, outputPath, classificationType, CLASSES, COLORS, VideoStream):
+def run(camera, timeOfClips, outputPath, VideoStream):
         print('[INFO] Initiating Recording Protocol...')
 
         # Start Time
@@ -130,7 +130,7 @@ def run(net, confidenceThreshold, camera, timeOfClips, outputPath, classificatio
         print('[INFO] Elapsed Time: ' + str(elapsedTime) + ' seconds')
 
 
-def idle(net, confidenceThreshold, camera, timeOfClips, outputPath, classificationType, CLASSES, COLORS):
+def idle(camera, timeOfClips, outputPath):
         print("[INFO] System turned on.")
         print("[INFO] Initiating idle state...")
         local_tz = get_localzone() 
@@ -139,142 +139,27 @@ def idle(net, confidenceThreshold, camera, timeOfClips, outputPath, classificati
                 now = datetime.now().strftime('%H:%M:%S')
                 #print(now)
                 if(str(now) == '05:50:00' or str(now) == '18:00:00'):
+                        print("[INFO] Video Stream Started.")           
                         VideoStream = initVideoStream(camera)
-                        run(net, confidenceThreshold, camera, timeOfClips, outputPath, classificationType, CLASSES, COLORS, VideoStream)
-                        print("[INFO] Video Stream Finished.")           
-                global onOffSwitch
-                if (onOffSwitch == False):
+                        run(camera, timeOfClips, outputPath, VideoStream)
                         closeVideoStream(VideoStream)
-                        print("[INFO] System turned off.")
-                        break
+                        print("[INFO] Video Stream Finished.")           
 
 
-def main():
+# construct the argument parse and parse the arguments
+ap = argparse.ArgumentParser()
 
-        # construct the argument parse and parse the arguments
-        ap = argparse.ArgumentParser()
-        ap.add_argument("-p", "--prototxt", required=True,
-                help="path to Caffe 'deploy' prototxt file")
-        ap.add_argument("-m", "--model", required=True,
-                help="path to Caffe pre-trained model")
-        ap.add_argument("-c", "--confidence", type=float, default=0.2,
-                help="minimum probability to filter weak detections")
-        ap.add_argument("-r", "--picamera", type=int, default=1,
-                help="whether or not the Raspberry Pi camera should be used")
-        ap.add_argument("-t", "--time",type=int, default=60,
-                help="time in seconds")
-        ap.add_argument("-o", "--outputPath", default='test.avi',
-                help="output video file path")
-        ap.add_argument("-f", "--detections", type=int, default=0,
-                help="0 will only detect people, 1 will detect all the net is capable of")
-        args = vars(ap.parse_args())
+ap.add_argument("-r", "--picamera", type=int, default=1,
+        help="whether or not the Raspberry Pi camera should be used")
+ap.add_argument("-t", "--time",type=int, default=60,
+        help="time in seconds")
+ap.add_argument("-o", "--outputPath", default='test.avi',
+        help="output video file path")
 
-        prototxt = args["prototxt"]
-        model = args["model"]
-        confidenceThreshold = args["confidence"]
-        camera = args["picamera"]
-        timeOfClips = args['time']
-        outputPath = args['outputPath']
-        classificationType = args["detections"]
+args = vars(ap.parse_args())
 
-	net = 0
+camera = args["picamera"]
+timeOfClips = args['time']
+outputPath = args['outputPath']
 
-        # initialize the list of class labels MobileNet SSD was trained to
-        # detect, then generate a set of bounding box colors for each class
-        CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
-                "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
-                "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
-                "sofa", "train", "tvmonitor"]
-        COLORS = np.random.uniform(0, 255, size=(len(CLASSES), 3))
-        
-  
-        idle(net, confidenceThreshold, camera, timeOfClips, outputPath, classificationType, CLASSES, COLORS)
-
-
-
-
-def server_response(reponse):
-         # pause 5.5 seconds
-        print('Sleeping...')
-        global PHONE
-        global PORT_PHONE
-        print('[INFO] Connecting to HOST: ' + str(PHONE) + ', on PORT: ' + str(PORT_PHONE))
-        
-        # create a client socket
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-                # bind socket to Host and Port
-                s.connect((PHONE, PORT_PHONE))
-        except socket.error as err:
-                print('[ERROR] Bind Failed, Error Code: ' + str(err))
-                sys.exit()
-        # send reponse
-        s.send(reponse)
-        s.close()
-
-def listen_client():
-        global PI
-        global PORT_PI
-        print('[INFO] Connecting to HOST: ' + str(PI) + ', on PORT: ' + str(PORT_PI))
-        
-        # create a server socket
-        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-               # bind socket to Host and Port      
-                server_socket.bind((PI, PORT_PI))
-        except socket.error as err:
-                print('[ERROR] Bind Failed, Error Code: ' + str(err))
-                sys.exit()
-        #listen(): This method sets up and start TCP listener.
-        server_socket.listen(10)
-        while True:
-                conn, addr = server_socket.accept()
-                buf = conn.recv(1024)
-                if(buf != None):
-                        global onOffSwitch
-                        if(onOffSwitch == True):
-                                onOffSwitch = False
-                                server_response('OFF')
-                                B["text"] = "OFF"
-                        elif(onOffSwitch == False):
-                                onOffSwitch = True
-                                thread = threading.Thread(target=main)  
-                                thread.start() 
-                                server_response('ON')
-                                B["text"] = "ON"
-        server_socket.close()
-
-
-
-
-
-def callBack():
-        global onOffSwitch
-        if onOffSwitch == False:
-                onOffSwitch = True
-                thread = threading.Thread(target=main)  
-                thread.start() 
-                B["text"] = "ON"
-        elif onOffSwitch == True:
-                onOffSwitch = False
-                B["text"] = "OFF"
-
-# global swtich
-onOffSwitch = False
-
-# local host
-PI = ''
-PORT_PI = 8889
- 
-# phone
-PHONE = ''
-PORT_PHONE = 8888
-
-t = threading.Thread(target=listen_client)
-t.start()
-
-top = Tkinter.Tk()
-
-B = Tkinter.Button(top, text ="OFF", command = callBack)
-B.pack()
-top.mainloop()    
+idle(camera, timeOfClips, outputPath)
